@@ -20,6 +20,7 @@ import my.diploma.diplomacloudservice.service.CloudServiceImpl;
 import my.diploma.diplomacloudservice.service.FileManager;
 
 import java.io.IOException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -71,7 +72,7 @@ public class TestCloudServiceApplication {
     }
 
     @Test
-    public void testSaveFileWhenCorrectDataThenSaveFile() throws IOException {
+    public void testSaveFileWhenCorrectDataThenSaveFile() throws IOException, SQLIntegrityConstraintViolationException {
         when(cloudRepository.findByFilename(mockedFilename)).thenReturn(Optional.empty());
 
         cloudService.saveFile(mockedFilename, mockedFile);
@@ -92,7 +93,8 @@ public class TestCloudServiceApplication {
     }
 
     @Test
-    public void testDeleteFileWhenCorrectDataThenDeleteFile() throws IOException {
+    public void testDeleteFileWhenCorrectDataThenDeleteFile() throws IOException,
+            SQLIntegrityConstraintViolationException {
         when(cloudRepository.findByFilename(mockedFilename)).thenReturn(Optional.of(mockedFileFromDb));
 
         cloudService.deleteFile(mockedFilename);
@@ -112,20 +114,20 @@ public class TestCloudServiceApplication {
     }
 
     @Test
-    public void testDownloadFileWhenCorrectDataThenReturnFileDto() {
+    public void testDownloadFileWhenCorrectDataThenReturnFile() throws IOException,
+            SQLIntegrityConstraintViolationException {
         when(cloudRepository.findByFilename(mockedFilename)).thenReturn(Optional.of(mockedFileFromDb));
-        when(fileManager.downloadFile(mockedHash)).thenReturn(mockedResource);
 
-        FileDto actual = cloudService.downloadFile(mockedFilename);
+        File actual = cloudService.downloadFile(mockedFilename);
 
         verify(fileManager, times(1)).downloadFile(mockedHash);
 
-        FileDto expected = new FileDto(mockedHash, mockedResource.toString());
+        File expected = mockedFileFromDb;
         Assertions.assertEquals(expected, actual);
     }
 
     @Test
-    public void testEditFilenameWhenCorrectDataThenSaveWithNewName() {
+    public void testEditFilenameWhenCorrectDataThenSaveWithNewName() throws SQLIntegrityConstraintViolationException {
         String newName = "new-name";
         when(cloudRepository.findByFilename(mockedFilename)).thenReturn(Optional.of(mockedFileFromDb));
 

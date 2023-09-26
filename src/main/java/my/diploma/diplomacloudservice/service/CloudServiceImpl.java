@@ -4,19 +4,16 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
-import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import my.diploma.diplomacloudservice.dto.FileDto;
-import my.diploma.diplomacloudservice.dto.FileInfoDto;
 import my.diploma.diplomacloudservice.entity.File;
 import my.diploma.diplomacloudservice.exception.FileProcessingException;
 import my.diploma.diplomacloudservice.exception.IncorrectInputDataException;
-import my.diploma.diplomacloudservice.mapper.FileInfoMapper;
 import my.diploma.diplomacloudservice.repository.CloudRepository;
 
 import java.io.IOException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -29,10 +26,10 @@ public class CloudServiceImpl implements CloudService {
 
     private final CloudRepository cloudRepository;
     private final FileManager fileManager;
-    private final FileInfoMapper mapper;
+
 
     @Override
-    public void saveFile(String filename, MultipartFile file) {
+    public void saveFile(String filename, MultipartFile file) throws SQLIntegrityConstraintViolationException {
         try {
             log.info("Checking the existence of file {}", filename);
             if (cloudRepository.findByFilename(filename).isPresent()) {
@@ -59,7 +56,7 @@ public class CloudServiceImpl implements CloudService {
     }
 
     @Override
-    public void deleteFile(String filename) {
+    public void deleteFile(String filename) throws SQLIntegrityConstraintViolationException {
         File fileToDelete = getExistingFile(filename);
 
         try {
@@ -77,19 +74,14 @@ public class CloudServiceImpl implements CloudService {
     }
 
     @Override
-    public FileDto downloadFile(String filename) {
+    public File downloadFile(String filename) throws SQLIntegrityConstraintViolationException {
         File file = getExistingFile(filename);
 
         try {
             log.info("Downloading file {} from storage..", filename);
-            String hash = file.getHash();
-            Resource fileContent = fileManager.downloadFile(hash);
             log.info("File {} downloaded from storage", filename);
 
-            return FileDto.builder()
-                    .hash(hash)
-                    .file(fileContent.toString())
-                    .build();
+            return file;
 
         } catch (Exception ex) {
             throw new FileProcessingException(ex.getMessage());
@@ -97,18 +89,16 @@ public class CloudServiceImpl implements CloudService {
     }
 
     @Override
-    public void editFilename(String filename, String newName) {
+    public void editFilename(String filename, String newName) throws SQLIntegrityConstraintViolationException {
         File file = getExistingFile(filename);
         file.setFilename(newName);
         cloudRepository.save(file);
     }
 
     @Override
-    public List<FileInfoDto> getFiles(int limit) {
+    public List<File> getFiles(int limit) {
         log.info("Getting the file list..");
-        return cloudRepository.findAll(Pageable.ofSize(limit))
-                .map(mapper::fileToFileInfoDto)
-                .toList();
+        return cloudRepository.findAll(Pageable.ofSize(limit)).toList();
     }
 
     private File createFileInfo(String filename, MultipartFile file) throws IOException {
