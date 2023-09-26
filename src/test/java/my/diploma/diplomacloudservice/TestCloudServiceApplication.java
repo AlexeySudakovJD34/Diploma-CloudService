@@ -12,7 +12,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
-import my.diploma.diplomacloudservice.dto.FileDto;
 import my.diploma.diplomacloudservice.entity.File;
 import my.diploma.diplomacloudservice.exception.IncorrectInputDataException;
 import my.diploma.diplomacloudservice.repository.CloudRepository;

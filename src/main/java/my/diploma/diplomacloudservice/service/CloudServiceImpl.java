@@ -13,7 +13,6 @@ import my.diploma.diplomacloudservice.exception.IncorrectInputDataException;
 import my.diploma.diplomacloudservice.repository.CloudRepository;
 
 import java.io.IOException;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -29,7 +28,7 @@ public class CloudServiceImpl implements CloudService {
 
 
     @Override
-    public void saveFile(String filename, MultipartFile file) throws SQLIntegrityConstraintViolationException {
+    public void saveFile(String filename, MultipartFile file) {
         try {
             log.info("Checking the existence of file {}", filename);
             if (cloudRepository.findByFilename(filename).isPresent()) {
@@ -42,13 +41,13 @@ public class CloudServiceImpl implements CloudService {
 
             File uploadedFile = createFileInfo(filename, file);
 
-            log.info("Uploading file {} to storage..", filename);
-            fileManager.uploadFile(file.getBytes(), uploadedFile.getHash(), filename);
-            log.info("File {} uploaded to storage", filename);
-
             log.info("Saving file info of {} to database..", filename);
             cloudRepository.save(uploadedFile);
             log.info("File info of {} saved to database", filename);
+
+            log.info("Uploading file {} to storage..", filename);
+            fileManager.uploadFile(file.getBytes(), uploadedFile.getHash(), filename);
+            log.info("File {} uploaded to storage", filename);
 
         } catch (IOException ex) {
             throw new FileProcessingException(ex.getMessage());
@@ -56,17 +55,17 @@ public class CloudServiceImpl implements CloudService {
     }
 
     @Override
-    public void deleteFile(String filename) throws SQLIntegrityConstraintViolationException {
+    public void deleteFile(String filename) {
         File fileToDelete = getExistingFile(filename);
 
         try {
-            log.info("Deleting file {} from storage..", filename);
-            fileManager.deleteFile(fileToDelete.getHash());
-            log.info("file {} deleted from storage", filename);
-
             log.info("Deleting file info of {} from database", filename);
             cloudRepository.delete(fileToDelete);
             log.info("File info of {} deleted from database", filename);
+
+            log.info("Deleting file {} from storage..", filename);
+            fileManager.deleteFile(fileToDelete.getHash());
+            log.info("file {} deleted from storage", filename);
 
         } catch (Exception ex) {
             throw new FileProcessingException(ex.getMessage());
@@ -74,7 +73,7 @@ public class CloudServiceImpl implements CloudService {
     }
 
     @Override
-    public File downloadFile(String filename) throws SQLIntegrityConstraintViolationException {
+    public File downloadFile(String filename) {
         File file = getExistingFile(filename);
 
         try {
@@ -89,7 +88,7 @@ public class CloudServiceImpl implements CloudService {
     }
 
     @Override
-    public void editFilename(String filename, String newName) throws SQLIntegrityConstraintViolationException {
+    public void editFilename(String filename, String newName) {
         File file = getExistingFile(filename);
         file.setFilename(newName);
         cloudRepository.save(file);

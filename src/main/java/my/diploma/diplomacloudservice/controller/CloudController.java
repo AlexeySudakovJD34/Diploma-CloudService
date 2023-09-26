@@ -12,7 +12,6 @@ import my.diploma.diplomacloudservice.dto.FileInfoDto;
 import my.diploma.diplomacloudservice.service.CloudService;
 import org.springframework.core.io.Resource;
 
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.Map;
 
@@ -27,22 +26,21 @@ public class CloudController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping("/file")
     @ResponseStatus(HttpStatus.OK)
-    public void uploadFile(@RequestParam String filename, @RequestBody MultipartFile file)
-            throws SQLIntegrityConstraintViolationException {
+    public void uploadFile(@RequestParam String filename, @RequestBody MultipartFile file) {
         cloudService.saveFile(filename, file);
     }
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("/file")
     @ResponseStatus(HttpStatus.OK)
-    public void deleteFile(@RequestParam String filename) throws SQLIntegrityConstraintViolationException {
+    public void deleteFile(@RequestParam String filename) {
         cloudService.deleteFile(filename);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @GetMapping("/file")
     @ResponseStatus(HttpStatus.OK)
-    public FileDto downloadFile(@RequestParam String filename) throws SQLIntegrityConstraintViolationException {
+    public FileDto downloadFile(@RequestParam String filename) {
         String hash = cloudService.downloadFile(filename).getHash();
         Resource fileContent = fileManager.downloadFile(hash);
         return FileDto.builder()
@@ -54,8 +52,7 @@ public class CloudController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PutMapping("/file")
     @ResponseStatus(HttpStatus.OK)
-    public void editFileName(@RequestParam String filename, @RequestBody Map<String, String> newName)
-            throws SQLIntegrityConstraintViolationException {
+    public void editFileName(@RequestParam String filename, @RequestBody Map<String, String> newName) {
         cloudService.editFilename(filename, newName.get("filename"));
     }
 
